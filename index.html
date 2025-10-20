@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProDoc - 专业文档编辑器</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.3.0/docx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="app-header">
+            <div class="header-left">
+                <button class="icon-btn" id="menuToggle">
+                    <i class="ri-menu-line"></i>
+                </button>
+                <div class="logo">
+                    <i class="ri-file-text-line"></i>
+                    <span>ProDoc</span>
+                </div>
+            </div>
+            
+            <div class="header-center">
+                <div class="doc-title" id="docTitle" contenteditable="true">无标题文档</div>
+            </div>
+            
+            <div class="header-right">
+                <button class="icon-btn" id="saveBtn" title="保存">
+                    <i class="ri-save-3-line"></i>
+                </button>
+                <button class="icon-btn" id="importBtn" title="导入">
+                    <i class="ri-upload-2-line"></i>
+                </button>
+                <button class="icon-btn" id="exportBtn" title="导出">
+                    <i class="ri-download-2-line"></i>
+                </button>
+                <div class="user-avatar">
+                    <i class="ri-user-line"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="tool-btn" data-action="undo" title="撤销">
+                    <i class="ri-arrow-go-back-line"></i>
+                </button>
+                <button class="tool-btn" data-action="redo" title="重做">
+                    <i class="ri-arrow-go-forward-line"></i>
+                </button>
+            </div>
+            
+            <div class="toolbar-divider"></div>
+            
+            <div class="toolbar-group">
+                <button class="tool-btn" id="formatPainter" title="格式刷">
+                    <i class="ri-brush-line"></i>
+                </button>
+                <button class="tool-btn" data-action="removeFormat" title="清除格式">
+                    <i class="ri-eraser-line"></i>
+                </button>
+            </div>
+            
+            <div class="toolbar-divider"></div>
+            
+            <div class="toolbar-group">
+                <select class="font-select" id="fontFamily">
+                    <option value="-apple-system, BlinkMacSystemFont, sans-serif">系统默认</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Microsoft YaHei">微软雅黑</option>
+                    <option value="SimSun">宋体</option>
+                    <option value="KaiTi">楷体</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Verdana">Verdana</option>
+                </select>
+                
+                <select class="size-select" id="fontSize">
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16" selected>16</option>
+                    <option value="18">18</option>
+                    <option value="20">20</option>
+                    <option value="22">22</option>
+                    <option value="24">24</option>
+                    <option value="28">28</option>
+                    <option value="32">32</option>
+                    <option value="36">36</option>
+                    <option value="48">48</option>
+                    <option value="64">64</option>
+                </select>
+            </div>
+            
+            <div class="toolbar-divider"></div>
+            
+            <div class="toolbar-group">
+                <button class="tool-btn" data-action="bold" title="粗体">
+                    <i class="ri-bold"></i>
+                </button>
+                <button class="tool-btn" data-action="italic" title="斜体">
+                    <i class="ri-italic"></i>
+                </button>
+                <button class="tool-btn" data-action="underline" title="下划线">
+                    <i class="ri-underline"></i>
+                </button>
+                <button class="tool-btn" data-action="strikethrough" title="删除线">
+                    <i class="ri-strikethrough"></i>
+                </button>
+            </div>
+            
+            <div class="toolbar-divider"></div>
+            
+            <div class="toolbar-group">
+                <button class="tool-btn" data-action="foreColor" title="文字颜色">
+                    <i class="ri-palette-line"></i>
+                    <input type="color" class="color-input" id="textColor">
+                </button>
+                <button class="tool-btn" data-action="backColor" title="背景颜色">
+                    <i class="ri-paint-fill"></i>
+                    <input type="color" class="color-input" id="bgColor">
+                </button>
+            </div>
+            
+            <div class="toolbar-divider"></div>
+            
+            <div class="toolbar-group">
+                <button class="tool-btn" data-action="insertOrderedList" title="有序列表">
+                    <i class="ri-list-ordered"></i>
+                </button>
+                <button class="tool-btn" data-action="insertUnorderedList" title="无序列表">
+                    <i class="ri-list-unordered"></i>
+                </button>
+                <button class="tool-btn" data-action="indent" title="增加缩进">
+                    <i class="ri-indent-increase"></i>
+                </button>
+                <button class="tool-btn" data-action="outdent" title="减少缩进">
+                    <i class="ri-indent-decrease"></i>
+                </button>
+            </div>
+            
+            <div class="toolbar-divider"></div>
+            
+            <div class="toolbar-group">
+                <button class="tool-btn" data-action="justifyLeft" title="左对齐">
+                    <i class="ri-align-left"></i>
+                </button>
+                <button class="tool-btn" data-action="justifyCenter" title="居中">
+                    <i class="ri-align-center"></i>
+                </button>
+                <button class="tool-btn" data-action="justifyRight" title="右对齐">
+                    <i class="ri-align-right"></i>
+                </button>
+                <button class="tool-btn" data-action="justifyFull" title="两端对齐">
+                    <i class="ri-align-justify"></i>
+                </button>
+            </div>
+            
+            <div class="toolbar-divider"></div>
+            
+            <div class="toolbar-group">
+                <button class="tool-btn" id="insertLink" title="插入链接">
+                    <i class="ri-link"></i>
+                </button>
+                <button class="tool-btn" id="insertImage" title="插入图片">
+                    <i class="ri-image-line"></i>
+                </button>
+                <button class="tool-btn" id="insertVideo" title="插入视频">
+                    <i class="ri-video-line"></i>
+                </button>
+                <button class="tool-btn" id="insertTable" title="插入表格">
+                    <i class="ri-table-line"></i>
+                </button>
+                <button class="tool-btn" id="insertCode" title="插入代码">
+                    <i class="ri-code-line"></i>
+                </button>
+                <button class="tool-btn" id="insertQuote" title="引用">
+                    <i class="ri-double-quotes-l"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h3>文档导航</h3>
+                    <button class="icon-btn" id="closeSidebar">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+                
+                <div class="sidebar-content">
+                    <div class="nav-section">
+                        <h4>大纲</h4>
+                        <div class="outline-list" id="outlineList">
+                            <div class="outline-item">开始编辑以生成大纲</div>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h4>文档信息</h4>
+                        <div class="doc-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">字数</span>
+                                <span class="stat-value" id="wordCount">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">字符</span>
+                                <span class="stat-value" id="charCount">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">段落</span>
+                                <span class="stat-value" id="paraCount">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">阅读时间</span>
+                                <span class="stat-value" id="readTime">0分钟</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h4>版本历史</h4>
+                        <div class="version-list" id="versionList">
+                            <div class="version-item">
+                                <span class="version-time">刚刚</span>
+                                <span class="version-desc">自动保存</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="editor-area" id="editorArea">
+                <div class="editor-wrapper">
+                    <div class="page" id="editor" contenteditable="true" spellcheck="false">
+                        <h1>开始写作</h1>
+                        <p>在这里输入您的文档内容，支持富文本编辑、实时保存、多格式导出等专业功能。</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="pageInfo">第 1 页</span>
+                <span id="cursorPos">行 1, 列 1</span>
+            </div>
+            <div class="status-center">
+                <span id="saveStatus">已自动保存</span>
+            </div>
+            <div class="status-right">
+                <span id="zoomLevel">100%</span>
+                <button class="icon-btn" id="zoomOut" title="缩小">
+                    <i class="ri-zoom-out-line"></i>
+                </button>
+                <button class="icon-btn" id="zoomIn" title="放大">
+                    <i class="ri-zoom-in-line"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="linkModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>插入链接</h3>
+                <button class="icon-btn modal-close">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>显示文本</label>
+                    <input type="text" id="linkText" placeholder="输入链接显示的文本">
+                </div>
+                <div class="form-group">
+                    <label>链接地址</label>
+                    <input type="url" id="linkUrl" placeholder="https://example.com">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="linkNewTab" checked>
+                        在新标签页打开
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-close">取消</button>
+                <button class="btn btn-primary" id="confirmLink">插入</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="imageModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <h3>插入图片</h3>
+                <button class="icon-btn modal-close">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>选择图片</label>
+                    <input type="file" id="imageFile" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>图片URL</label>
+                    <input type="url" id="imageUrl" placeholder="https://example.com/image.jpg">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>宽度</label>
+                        <input type="number" id="imageWidth" value="400" min="50" max="1200">
+                    </div>
+                    <div class="form-group">
+                        <label>高度</label>
+                        <input type="number" id="imageHeight" value="300" min="50" max="900">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>图片样式</label>
+                    <div class="style-options">
+                        <label><input type="checkbox" id="imageShadow"> 阴影</label>
+                        <label><input type="checkbox" id="imageBorder"> 描边</label>
+                        <label><input type="checkbox" id="imageRounded"> 圆角</label>
+                    </div>
+                </div>
+                <div class="image-preview" id="imagePreview">
+                    <p>图片预览</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-close">取消</button>
+                <button class="btn btn-primary" id="confirmImage">插入</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="videoModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>插入视频</h3>
+                <button class="icon-btn modal-close">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>视频链接</label>
+                    <input type="url" id="videoUrl" placeholder="支持YouTube、Bilibili等">
+                </div>
+                <div class="form-group">
+                    <label>视频标题</label>
+                    <input type="text" id="videoTitle" placeholder="输入视频标题">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>宽度</label>
+                        <input type="number" id="videoWidth" value="560" min="200" max="1000">
+                    </div>
+                    <div class="form-group">
+                        <label>高度</label>
+                        <input type="number" id="videoHeight" value="315" min="150" max="600">
+                    </div>
+                </div>
+                <div class="video-preview" id="videoPreview">
+                    <p>视频预览</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-close">取消</button>
+                <button class="btn btn-primary" id="confirmVideo">插入</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="tableModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>插入表格</h3>
+                <button class="icon-btn modal-close">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-size-selector">
+                    <div class="size-grid" id="sizeGrid"></div>
+                    <div class="size-preview">
+                        <span id="sizePreview">选择表格大小</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-close">取消</button>
+                <button class="btn btn-primary" id="confirmTable">插入</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="exportModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>导出文档</h3>
+                <button class="icon-btn modal-close">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="export-options">
+                    <div class="export-option" data-format="docx">
+                        <i class="ri-file-word-line"></i>
+                        <div class="option-info">
+                            <h4>Word 文档</h4>
+                            <p>.docx 格式</p>
+                        </div>
+                    </div>
+                    <div class="export-option" data-format="pdf">
+                        <i class="ri-file-pdf-line"></i>
+                        <div class="option-info">
+                            <h4>PDF 文档</h4>
+                            <p>.pdf 格式</p>
+                        </div>
+                    </div>
+                    <div class="export-option" data-format="html">
+                        <i class="ri-html5-line"></i>
+                        <div class="option-info">
+                            <h4>HTML 网页</h4>
+                            <p>.html 格式</p>
+                        </div>
+                    </div>
+                    <div class="export-option" data-format="md">
+                        <i class="ri-markdown-line"></i>
+                        <div class="option-info">
+                            <h4>Markdown</h4>
+                            <p>.md 格式</p>
+                        </div>
+                    </div>
+                    <div class="export-option" data-format="txt">
+                        <i class="ri-file-text-line"></i>
+                        <div class="option-info">
+                            <h4>纯文本</h4>
+                            <p>.txt 格式</p>
+                        </div>
+                    </div>
+                    <div class="export-option" data-format="json">
+                        <i class="ri-code-s-slash-line"></i>
+                        <div class="option-info">
+                            <h4>JSON 数据</h4>
+                            <p>.json 格式</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <footer class="footer">
+        <p>© 2025 ProDoc - 基于 MIT 许可证开源 | <a href="https://opensource.org/licenses/MIT" target="_blank">查看许可证</a></p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
